@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const API = "https://your-backend-url.onrender.com"; // 🔥 CHANGE THIS AFTER DEPLOY
+// Read from Environment Variables in Netlify, otherwise default to local backend
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000"; 
 
 function App() {
   const [text, setText] = useState("");
