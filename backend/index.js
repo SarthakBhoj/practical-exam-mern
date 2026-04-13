@@ -1,42 +1,44 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
 
+// Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors()); // Makes all URLs accessible publicly
 
-// 👉 USE ATLAS URL for deployment
-mongoose.connect("mongodb+srv://bsarthak4u:Sarthak@3035@sarthak.bof6i30.mongodb.net/?appName=Sarthak")
-    .then(() => console.log("DB Connected"))
-    .catch(err => console.log(err));
-
-const Todo = require("./models/todo");
+// In-memory database (replaces MongoDB)
+let todos = [];
+let nextId = 1;
 
 // ADD
-app.post("/add", async (req, res) => {
-    const todo = new Todo({ text: req.body.text });
-    await todo.save();
+app.post("/add", (req, res) => {
+    // Generate a new ID and create the todo
+    // We use '_id' to match what MongoDB used, so your frontend doesn't break
+    const todo = { _id: String(nextId++), text: req.body.text };
+    todos.push(todo);
     res.send(todo);
 });
 
 // GET
-app.get("/get", async (req, res) => {
-    const data = await Todo.find();
-    res.json(data);
+app.get("/get", (req, res) => {
+    res.json(todos);
 });
 
 // UPDATE
-app.put("/update/:id", async (req, res) => {
-    await Todo.findByIdAndUpdate(req.params.id, { text: req.body.text });
+app.put("/update/:id", (req, res) => {
+    const todo = todos.find(t => t._id === req.params.id);
+    if (todo) {
+        todo.text = req.body.text;
+    }
     res.send("Updated");
 });
 
 // DELETE
-app.delete("/delete/:id", async (req, res) => {
-    await Todo.findByIdAndDelete(req.params.id);
+app.delete("/delete/:id", (req, res) => {
+    todos = todos.filter(t => t._id !== req.params.id);
     res.send("Deleted");
 });
 
-app.listen(5000, () => console.log("Server running"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT} (Database: In-Memory Array)`));
