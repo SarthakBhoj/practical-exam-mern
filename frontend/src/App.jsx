@@ -1,40 +1,28 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-
-// Read from Environment Variables in Netlify, otherwise default to local backend
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000"; 
+import React, { useState } from "react";
 
 function App() {
   const [text, setText] = useState("");
   const [todos, setTodos] = useState([]);
   const [editId, setEditId] = useState(null);
 
-  const fetchTodos = async () => {
-    const res = await axios.get(`${API}/get`);
-    setTodos(res.data);
-  };
-
-  useEffect(() => {
-    fetchTodos();
-  }, []);
-
-  const addOrUpdate = async () => {
+  const addOrUpdate = () => {
     if (!text) return;
 
     if (editId) {
-      await axios.put(`${API}/update/${editId}`, { text });
+      // Update existing item in the array
+      setTodos(todos.map(t => (t._id === editId ? { ...t, text } : t)));
       setEditId(null);
     } else {
-      await axios.post(`${API}/add`, { text });
+      // Add new item to the array (generate a random ID like MongoDB used to)
+      setTodos([...todos, { _id: Date.now().toString(), text }]);
     }
 
-    setText("");
-    fetchTodos();
+    setText(""); // Clear input box
   };
 
-  const deleteTodo = async (id) => {
-    await axios.delete(`${API}/delete/${id}`);
-    fetchTodos();
+  const deleteTodo = (id) => {
+    // Remove item from the array
+    setTodos(todos.filter((t) => t._id !== id));
   };
 
   return (
